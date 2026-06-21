@@ -1,0 +1,380 @@
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘 뭐 먹지? - 결정 장애 해결 룰렛</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome (아이콘용) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .fancy-title {
+            font-family: 'Jua', sans-serif;
+        }
+        /* 룰렛 스타일 */
+        .roulette-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto;
+        }
+        .roulette-wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #333;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1);
+            overflow: hidden;
+            position: relative;
+        }
+        .roulette-arrow {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ef4444;
+            z-index: 10;
+            filter: drop-shadow(0px 4px 5px rgba(0,0,0,0.3));
+        }
+        .roulette-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border: 4px solid #333;
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-gray-800">
+
+    <!-- 헤더 -->
+    <header class="bg-white shadow-md py-4 px-6 sticky top-0 z-50">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <h1 class="text-2xl fancy-title text-indigo-600 flex items-center gap-2">
+                <i class="fa-solid fa-utensils"></i> 오늘 뭐 먹지?
+            </h1>
+            <span class="text-xs bg-indigo-100 text-indigo-800 font-semibold px-2.5 py-0.5 rounded-full">룰렛 에디션</span>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-md">
+        
+        <!-- 단계 표시기 -->
+        <div class="flex justify-between items-center mb-8 bg-white p-3 rounded-xl shadow-sm">
+            <div id="step1-indicator" class="flex-1 text-center font-bold text-indigo-600 border-b-2 border-indigo-600 pb-1 text-sm">
+                1단계: 음식 종류 결정
+            </div>
+            <div class="text-gray-300 px-2"><i class="fa-solid fa-chevron-right"></i></div>
+            <div id="step2-indicator" class="flex-1 text-center text-gray-400 pb-1 text-sm">
+                2단계: 최종 메뉴 결정
+            </div>
+        </div>
+
+        <!-- 1단계: 카테고리 결정 영역 -->
+        <div id="step1-card" class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <h2 class="text-xl font-bold text-center mb-2">어떤 음식을 먹고 싶나요?</h2>
+            <p class="text-sm text-gray-500 text-center mb-6">원하는 장르를 선택하거나, 룰렛을 돌려보세요!</p>
+
+            <!-- 선택 버튼들 -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="selectCategory('한식')" class="py-3 px-4 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-xl font-bold text-orange-700 transition flex items-center justify-center gap-2">
+                    🇰🇷 한식
+                </button>
+                <button onclick="selectCategory('중식')" class="py-3 px-4 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl font-bold text-red-700 transition flex items-center justify-center gap-2">
+                    🇨🇳 중식
+                </button>
+                <button onclick="selectCategory('일식')" class="py-3 px-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl font-bold text-blue-700 transition flex items-center justify-center gap-2">
+                    🇯🇵 일식
+                </button>
+                <button onclick="selectCategory('양식')" class="py-3 px-4 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-xl font-bold text-yellow-700 transition flex items-center justify-center gap-2">
+                    🍕 양식
+                </button>
+            </div>
+
+            <div class="relative flex py-3 items-center mb-6">
+                <div class="flex-grow border-t border-gray-200"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase">또는</span>
+                <div class="flex-grow border-t border-gray-200"></div>
+            </div>
+
+            <!-- 1단계 룰렛 -->
+            <div class="roulette-container mb-6">
+                <div class="roulette-arrow"></div>
+                <div class="roulette-center"></div>
+                <canvas id="canvas-step1" class="roulette-wheel"></canvas>
+            </div>
+
+            <button id="btn-spin-step1" onclick="spinStep1()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate"></i> 음식 종류 룰렛 돌리기
+            </button>
+        </div>
+
+        <!-- 2단계: 최종 메뉴 결정 영역 (기본 숨김) -->
+        <div id="step2-card" class="bg-white rounded-2xl shadow-xl p-6 mb-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="goBack()" class="text-sm text-gray-500 hover:text-indigo-600 flex items-center gap-1">
+                    <i class="fa-solid fa-arrow-left"></i> 처음으로
+                </button>
+                <span id="selected-category-badge" class="text-sm bg-indigo-100 text-indigo-800 font-bold px-3 py-1 rounded-full"></span>
+            </div>
+
+            <h2 class="text-xl font-bold text-center mb-2">오늘의 최종 메뉴는?</h2>
+            <p class="text-sm text-gray-500 text-center mb-6">룰렛을 돌려서 최종 맛있는 한 끼를 골라봐요!</p>
+
+            <!-- 2단계 룰렛 -->
+            <div class="roulette-container mb-6">
+                <div class="roulette-arrow"></div>
+                <div class="roulette-center"></div>
+                <canvas id="canvas-step2" class="roulette-wheel"></canvas>
+            </div>
+
+            <button id="btn-spin-step2" onclick="spinStep2()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> 최종 메뉴 룰렛 돌리기
+            </button>
+        </div>
+
+        <!-- 모달 결과 팝업 -->
+        <div id="result-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4 hidden">
+            <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl transform scale-95 transition-transform duration-300" id="modal-card">
+                <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl" id="modal-icon">
+                    🎉
+                </div>
+                <p class="text-gray-500 text-sm font-semibold mb-1" id="modal-subtitle">오늘의 추천 메뉴</p>
+                <h3 class="text-3xl font-extrabold text-gray-900 fancy-title mb-6" id="modal-title">맛있는 메뉴</h3>
+                
+                <div class="flex gap-3">
+                    <button onclick="closeModal()" class="flex-1 py-3 border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition">
+                        닫기
+                    </button>
+                    <button id="modal-action-btn" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition">
+                        다음 단계로
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-gray-800 text-gray-400 py-6 text-center text-xs">
+        <p>© 2026 오늘 뭐 먹지? 룰렛. All rights reserved.</p>
+        <p class="mt-1">깃허브 페이지로 호스팅되는 나만의 맞춤형 결정장애 도우미</p>
+    </footer>
+
+    <!-- 자바스크립트 로직 -->
+    <script>
+        // 메뉴 데이터 설정
+        const menuData = {
+            '한식': ['비빔밥', '김치찌개', '삼겹살', '제육볶음', '불고기', '떡볶이', '갈비탕', '된장찌개'],
+            '중식': ['짜장면', '짬뽕', '탕수육', '마라탕', '양꼬치', '볶음밥', '멘보샤', '깐풍기'],
+            '일식': ['초밥', '돈카츠', '라멘', '우동', '규동', '소바', '텐동', '야키토리'],
+            '양식': ['파스타', '피자', '스테이크', '리조또', '햄버거', '샌드위치', '감바스', '샐러드']
+        };
+
+        const categories = Object.keys(menuData);
+        let currentCategory = '';
+        let isSpinning = false;
+
+        // 색상 파레트
+        const colors = [
+            '#FF6B6B', '#4D96FF', '#6BCB77', '#FFD93D', 
+            '#9B5DE5', '#F15BB5', '#00BBF9', '#00F5D4',
+            '#FF9F1C', '#E71D36', '#2EC4B6', '#FF9F1C'
+        ];
+
+        // 페이지 로드 시 초기화
+        window.onload = function() {
+            drawRoulette('canvas-step1', categories);
+        };
+
+        // 룰렛 그리기 함수
+        function drawRoulette(canvasId, items) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // 해상도 조절을 위한 캔버스 크기 세팅
+            canvas.width = 500;
+            canvas.height = 500;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const center = width / 2;
+            const radius = width / 2 - 10;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const arcSize = (2 * Math.PI) / items.length;
+            
+            for (let i = 0; i < items.length; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, radius, i * arcSize, (i + 1) * arcSize);
+                ctx.lineTo(center, center);
+                ctx.fill();
+                
+                // 테두리선
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // 텍스트 추가
+                ctx.save();
+                ctx.fillStyle = '#111827';
+                ctx.font = 'bold 22px "Noto Sans KR"';
+                ctx.textAlign = 'right';
+                ctx.translate(center, center);
+                ctx.rotate(i * arcSize + arcSize / 2);
+                ctx.fillText(items[i], radius - 30, 8);
+                ctx.restore();
+            }
+        }
+
+        // 1단계: 룰렛 돌리기
+        function spinStep1() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const wheel = document.getElementById('canvas-step1');
+            const randAngle = Math.floor(Math.random() * 360) + 1440; // 최소 4바퀴 회전
+            
+            wheel.style.transform = `rotate(${randAngle}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                // 당첨된 인덱스 계산 (화살표는 상단 12시 방향인 270도 기준)
+                const actualDegree = randAngle % 360;
+                const arcSize = 360 / categories.length;
+                
+                // 회전각도와 캔버스 좌표계 사이의 오프셋 보정 계산
+                const pointerAngle = (270 - actualDegree + 360) % 360;
+                const winnerIndex = Math.floor(pointerAngle / arcSize);
+                const selected = categories[winnerIndex];
+
+                showModal('카테고리 결정!', `🎯 ${selected}`, '음식 종류가 결정되었습니다!', () => {
+                    selectCategory(selected);
+                    closeModal();
+                }, '2단계 진행');
+
+            }, 4000); // 4초 뒤 결과 도출
+        }
+
+        // 카테고리 바로 선택하기 또는 1단계 성공 후 전환
+        function selectCategory(category) {
+            currentCategory = category;
+            
+            // UI 변경
+            document.getElementById('step1-card').classList.add('hidden');
+            document.getElementById('step2-card').classList.remove('hidden');
+            
+            document.getElementById('step1-indicator').className = "flex-1 text-center text-gray-400 pb-1 text-sm";
+            document.getElementById('step2-indicator').className = "flex-1 text-center font-bold text-emerald-600 border-b-2 border-emerald-600 pb-1 text-sm";
+            
+            document.getElementById('selected-category-badge').innerText = `${category} 선정됨`;
+            
+            // 2단계 룰렛 그리기
+            setTimeout(() => {
+                // 트랜지션 초기화
+                const wheel = document.getElementById('canvas-step2');
+                wheel.style.transform = 'rotate(0deg)';
+                drawRoulette('canvas-step2', menuData[category]);
+            }, 50);
+        }
+
+        // 2단계: 최종 메뉴 룰렛 돌리기
+        function spinStep2() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const menus = menuData[currentCategory];
+            const wheel = document.getElementById('canvas-step2');
+            const randAngle = Math.floor(Math.random() * 360) + 1440;
+            
+            wheel.style.transform = `rotate(${randAngle}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                const actualDegree = randAngle % 360;
+                const arcSize = 360 / menus.length;
+                
+                const pointerAngle = (270 - actualDegree + 360) % 360;
+                const winnerIndex = Math.floor(pointerAngle / arcSize);
+                const finalMenu = menus[winnerIndex];
+
+                showModal('최종 결정 메뉴', `🍽️ ${finalMenu}`, '오늘의 식사는 이걸로 결정되었습니다!', () => {
+                    closeModal();
+                    goBack();
+                }, '다시 고르기');
+
+            }, 4000);
+        }
+
+        // 처음으로 돌아가기
+        function goBack() {
+            document.getElementById('step1-card').classList.remove('hidden');
+            document.getElementById('step2-card').classList.add('hidden');
+            
+            document.getElementById('step1-indicator').className = "flex-1 text-center font-bold text-indigo-600 border-b-2 border-indigo-600 pb-1 text-sm";
+            document.getElementById('step2-indicator').className = "flex-1 text-center text-gray-400 pb-1 text-sm";
+            
+            // 1단계 룰렛도 회전값 리셋
+            document.getElementById('canvas-step1').style.transform = 'rotate(0deg)';
+        }
+
+        // 모달 제어 함수
+        function showModal(subtitle, title, description, callback, actionText) {
+            const modal = document.getElementById('result-modal');
+            const card = document.getElementById('modal-card');
+            
+            document.getElementById('modal-subtitle').innerText = subtitle;
+            document.getElementById('modal-title').innerText = title;
+            
+            const actionBtn = document.getElementById('modal-action-btn');
+            actionBtn.innerText = actionText;
+            actionBtn.onclick = callback;
+
+            // 모달 노출 애니메이션
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            }, 50);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('result-modal');
+            const card = document.getElementById('modal-card');
+            
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+    </script>
+</body>
+</html>
+
+```
